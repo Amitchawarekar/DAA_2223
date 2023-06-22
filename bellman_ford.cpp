@@ -23,7 +23,6 @@ struct Graph* createGraph(int V, int E)
     return graph;
 }
   
-//Print Solution function
 void printArr(int dist[], int n)
 {
     printf("Vertex   Distance from Source\n");
@@ -31,7 +30,6 @@ void printArr(int dist[], int n)
         printf("%d \t\t %d\n", i, dist[i]);
 }
   
-//BellmanFord Function(main page)
 void BellmanFord(struct Graph* graph, int src)
 {
     int V = graph->V;
@@ -63,8 +61,7 @@ void BellmanFord(struct Graph* graph, int src)
         if (dist[u] != INT_MAX
             && dist[u] + weight < dist[v]) {
             printf("Graph contains negative weight cycle");
-            return; // If negative cycle is detected, simply
-                    // return
+            return; 
         }
     }
   
@@ -76,42 +73,35 @@ void BellmanFord(struct Graph* graph, int src)
 // Driver's code
 int main()
 {
-    int V = 5; // Number of vertices in graph
-    int E = 8; // Number of edges in graph
+    int V = 5;
+    int E = 6; 
     struct Graph* graph = createGraph(V, E);
   
     graph->edge[0].src = 0;
     graph->edge[0].dest = 1;
-    graph->edge[0].weight = -1;
+    graph->edge[0].weight = 2;
   
     graph->edge[1].src = 0;
     graph->edge[1].dest = 2;
-    graph->edge[1].weight = 4;
+    graph->edge[1].weight = 2;
   
     graph->edge[2].src = 1;
-    graph->edge[2].dest = 2;
+    graph->edge[2].dest = 3;
     graph->edge[2].weight = 3;
   
-    graph->edge[3].src = 1;
+    graph->edge[3].src = 2;
     graph->edge[3].dest = 3;
-    graph->edge[3].weight = 2;
+    graph->edge[3].weight = 6;
   
-    graph->edge[4].src = 1;
+    graph->edge[4].src = 3;
     graph->edge[4].dest = 4;
-    graph->edge[4].weight = 2;
+    graph->edge[4].weight = -5;
   
-    graph->edge[5].src = 3;
-    graph->edge[5].dest = 2;
-    graph->edge[5].weight = 5;
+    graph->edge[5].src = 2;
+    graph->edge[5].dest = 4;
+    graph->edge[5].weight = 4;
   
-    graph->edge[6].src = 3;
-    graph->edge[6].dest = 1;
-    graph->edge[6].weight = 1;
   
-    graph->edge[7].src = 4;
-    graph->edge[7].dest = 3;
-    graph->edge[7].weight = -3;
-      
       // Function call
     BellmanFord(graph, 0);
   
