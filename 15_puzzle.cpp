@@ -1,221 +1,208 @@
-// Program to print path from root node to destination node
-// for N*N -1 puzzle algorithm using Branch and Bound
-#include <bits/stdc++.h>
-#include <cstdlib>
+#include<iostream>
+#include<unordered_set>
+#include<vector>
+#include<queue>
+#include<map>
 using namespace std;
-#define N 4
 
-// state space tree nodes
-struct Node
-{
-	// stores the parent node of the current node
-	// helps in tracing path when the answer is found
-	Node* parent;
+vector<vector<int> >PuzzleTable(4,vector<int>(4));
+vector<vector<int> >ruftable(4,vector<int>(4));
+map<vector<vector<int> >,int>mymap;
+pair<int,int>blank;
+int level=1;
 
-	// stores matrix
-	int mat[N][N];
+// priority_queue<pair<int,    pair < pair<int,int> ,pair<int,vector<vector<int>>>> > > myq;      //val,(blank,(level,vector))
+priority_queue<pair<int,    pair < pair<int,int> ,pair<int,pair<int,vector<vector<int>>>>> > > myq;      //val,(blank,(level,(operation,vector))
 
-	// stores blank tile coordinates
-	int x, y;
-
-	// stores the number of misplaced tiles
-	int cost;
-
-	// stores the number of moves so far
-	int level;
-};
-
-// Function to print N x N matrix
-void printMatrix(int mat[N][N])
-{
-	for (int i = 0; i < N; i++)
-	{
-		for (int j = 0; j < N; j++)
-			printf("%d ", mat[i][j]);
-		printf("\n");
-	}
-}
-
-// Function to allocate a new node
-Node* newNode(int mat[N][N], int x, int y, int newX,
-			int newY, int level, Node* parent)
-{
-	Node* node = new Node;
-
-	// set pointer for path to root
-	node->parent = parent;
-
-	// copy data from parent node to current node
-	memcpy(node->mat, mat, sizeof node->mat);
-
-	// move tile by 1 position
-	swap(node->mat[x][y], node->mat[newX][newY]);
-
-	// set number of misplaced tiles
-	node->cost = INT_MAX;
-
-	// set number of moves so far
-	node->level = level;
-
-	// update new blank tile coordinates
-	node->x = newX;
-	node->y = newY;
-
-	return node;
-}
-
-// bottom, left, top, right
-int row[] = { 1, 0, -1, 0 };
-int col[] = { 0, -1, 0, 1 };
-
-// Function to calculate the number of misplaced tiles
-// ie. number of non-blank tiles not in their goal position
-int calculateCost(int initial[N][N], int final[N][N])
-{
-	int count = 0;
-	for (int i = 0; i < N; i++)
-	for (int j = 0; j < N; j++)
-		if (initial[i][j] && initial[i][j] != final[i][j])
-		count++;
-	return count;
-}
-
-// Function to check if (x, y) is a valid matrix coordinate
-int isSafe(int x, int y)
-{
-	return (x >= 0 && x < N && y >= 0 && y < N);
-}
-
-// print path from root node to destination node
-void printPath(Node* root)
-{
-	if (root == NULL)
-		return;
-	printPath(root->parent);
-	printMatrix(root->mat);
-
-	printf("\n");
-}
-
-// Comparison object to be used to order the heap
-struct comp
-{
-	bool operator()(const Node* lhs, const Node* rhs) const
-	{
-		return (lhs->cost + lhs->level) > (rhs->cost + rhs->level);
-	}
-};
-
-// Function to solve N*N - 1 puzzle algorithm using
-// Branch and Bound. x and y are blank tile coordinates
-// in initial state
-void solve(int initial[N][N], int x, int y,
-		int final[N][N])
-{
-	// Create a priority queue to store live nodes of
-	// search tree;
-	priority_queue<Node*, std::vector<Node*>, comp> pq;
-
-	// create a root node and calculate its cost
-	Node* root = newNode(initial, x, y, x, y, 0, NULL);
-	root->cost = calculateCost(initial, final);
-
-	// Add root to list of live nodes;
-	pq.push(root);
-
-	// Finds a live node with least cost,
-	// add its childrens to list of live nodes and
-	// finally deletes it from the list.
-	while (!pq.empty())
-	{
-		// Find a live node with least estimated cost
-		Node* min = pq.top();
-
-		// The found node is deleted from the list of
-		// live nodes
-		pq.pop();
-
-		// if min is an answer node
-		if (min->cost == 0)
-		{
-			// print the path from root to destination;
-			printPath(min);
-			return;
-		}
-
-		// do for each child of min
-		// max 4 children for a node
-		for (int i = 0; i < 4; i++)
-		{
-			if (isSafe(min->x + row[i], min->y + col[i]))
-			{
-				// create a child node and calculate
-				// its cost
-				Node* child = newNode(min->mat, min->x,
-							min->y, min->x + row[i],
-							min->y + col[i],
-							min->level + 1, min);
-				child->cost = calculateCost(child->mat, final);
-
-				// Add child to list of live nodes
-				pq.push(child);
-			}
-		}
-	}
-}
-
-int getInvCount(int arr[])
-{
-    int inv_count = 0;
-    for (int i = 0; i < 16 - 1; i++)
-        for (int j = i+1; j < 16; j++)
-             // Value 0 is used for empty space
-             if (arr[j] && arr[i] &&  arr[i] > arr[j])
-                  inv_count++;
-    return inv_count;
-}
- 
-// This function returns true if given 8 puzzle is solvable.
-bool isSolvable(int puzzle[4][4])
-{
-    // Count inversions in given 8 puzzle
-    int invCount = getInvCount((int *)puzzle);
- 
-    // return true if inversion count is even.
-    return (invCount%2 == 0);
-}
-
-// Driver code
-int main() {
-    int initial[N][N], final[N][N];
-    int x, y;
-
-    // take user input for the initial configuration
-    cout << "Enter the initial configuration (0 for empty space):\n";
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            cin >> initial[i][j];
-        }
-    }
+class branchAndBound{
+    int val;
     
-    if(!isSolvable(initial)){
-        cout << "\nNot Solvable\n";
-        exit(0);
-    }
-                      
-    // take user input for the final configuration
-    cout << "\nEnter the final configuration (0 for empty space):\n";
-    for (int i = 0; i < N; i++) {
-        for (int j = 0; j < N; j++) {
-            cin >> final[i][j];
+    int dRow[4]={-1,0,1,0};
+                //up     right     down     left 
+    int dCol[4]={0,1,0,-1};
+    
+    int times=12;
+public:
+     void setInput(){
+            // cout<<"Enter the values ::For blank Enter 0 "<<endl;
+            // for(int i=0;i<4;i++){
+            //     for(int j=0;j<4;j++){
+            //     cout<<"Enter the value in the "<<i <<" ->"<<j<<endl;
+            //     cin>>val;
+            //         if(val>0){
+            //         PuzzleTable[i][j]=val;
+            //         }
+            //         else{
+            //             blank={i,j};
+            //         }
+            //     }
+            // }
+
+            // myq.push()
+
+             //displaying 
+            cout<<"The Input Graph is "<<endl;
+            for(int i=0;i<4;i++){
+                for(int j=0;j<4;j++){
+                    // cout<<"The Input Graph is "<<endl;
+                    cout<<PuzzleTable[i][j]<<" ";
+                }
+                cout<<endl;
+            }
+            cout<<endl;
         }
-    }
 
-    // take user input for the blank tile coordinates in initial configuration
-    cout << "Enter the blank tile coordinates (row column): ";
-    cin >> x >> y;
+        //to print 
+        void print(vector<vector<int>>PuzzleTable,int cost,int level, string operation){
+            cout<<"the next one is  "<<endl;
+            cout<<"The cost is "<<cost<<" "<<endl;
+            cout<<"Level is "<<level<<endl;
+            cout<<"The next move is "<< operation<<endl;
+            for(int i=0;i<4;i++){
+                for(int j=0;j<4;j++){
+                    // cout<<"The Input Graph is "<<endl;
+                    cout<<PuzzleTable[i][j]<<" ";
+                }
+                cout<<endl;
+            }
+            cout<<endl;
+        }
 
-    solve(initial, x, y, final);
+        // void printChild(vector<vector<int>>PuzzleTable,int cost,int level, string operation){
+        //     cout<<"the next one is  "<<endl;
+        //     cout<<"The cost is "<<cost<<" "<<endl;
+        //     cout<<"Level is "<<level<<endl;
+        //     cout<<"The next move is "<< operation<<endl;
+        //     for(int i=0;i<4;i++){
+        //         for(int j=0;j<4;j++){
+        //             // cout<<"The Input Graph is "<<endl;
+        //             cout<<PuzzleTable[i][j]<<" ";
+        //         }
+        //         cout<<endl;
+        //     }
+        //     cout<<endl;
+        // }
+
+        bool isValid(vector<vector<int> >&table,int i,int j){
+            if(i<0 || i>3 || j<0 || j>3){
+                return false;
+            }
+            // if(mymap.find(table)!=mymap.end()){
+            //     return false;
+            // }
+        }
+
+
+
+
+
+        int costfinder(vector<vector<int> >&table,int level){
+            int count =0;
+             for(int i=0;i<4;i++){
+                for(int j=0;j<4;j++){
+                    if(table[i][j]==NULL){
+                        continue;
+                    }
+                    if(i*4+(j+1)!=table[i][j]){
+                        count++;
+                    }
+                }
+            }
+            
+            return count + level;
+        }
+
+
+
+
+
+        void mainstart(vector<vector<int> >&PuzzleTable,pair<int,int>&blank,int level){
+
+                   for(int i=0;i<4;i++){
+                        int dx=blank.first + dRow[i];
+                        int dy=blank.second + dCol[i];
+
+                       if(isValid(PuzzleTable,dx,dy)){
+                        ruftable=PuzzleTable;
+                        // visit[dx][dy]=1;
+                        int temp=ruftable[dx][dy];
+                        ruftable[dx][dy]=ruftable[blank.first][blank.second];
+                        ruftable[blank.first][blank.second]=temp;
+
+
+                        // checking condition repitition
+
+                        if(mymap.find(ruftable)!=mymap.end()){
+                            // PuzzleTable=ruftable;
+                                continue;
+                        }
+                        
+                        mymap[ruftable]++;
+
+                        //cost finder
+                        int cost=costfinder(ruftable,level) * (-1);
+                        print(ruftable,cost,level+1," I am The Child ");
+                        // cout<<"the cost is "<<cost<<endl;
+                        myq.push({cost,{{dx,dy},{level,{i,ruftable}}}});
+                    }
+                   }
+            }
+
+        void next(){
+            // while(!myq.empty()){
+            while(!myq.empty()){
+                pair<int,    pair < pair<int,int> ,pair<int,pair<int,vector<vector<int>>>>> > cell =myq.top();
+
+//idhar dekh 
+                myq.pop();
+
+
+
+                int val=cell.first *(-1);
+                blank.first=cell.second.first.first;
+                blank.second=cell.second.first.second;
+                int new_level=cell.second.second.first;
+                int operation =cell.second.second.second.first;
+                string op;
+                if(operation==3){
+                        op="left";
+                }
+                else  if(operation==2){
+                        op="down";
+                }
+                else  if(operation==1){
+                        op="right";
+                }
+                else  if(operation==0){
+                        op="up";
+                }
+
+                PuzzleTable=cell.second.second.second.second;
+                if(val==new_level){
+                    print(PuzzleTable,val,new_level++,op);
+                    break;
+                }
+                print(PuzzleTable,val,new_level++,op);
+
+               
+
+                mainstart(PuzzleTable,blank,new_level);
+
+                times--;
+            }
+        }
+        
+
+
+};
+int main(){
+    branchAndBound c;
+    PuzzleTable={{0,1,2,3},{6,7,8,4},{5,9,10,11},{13,14,15,12}};
+    // PuzzleTable={{1,2,3,4},{5,6,0,8},{9,10,7,11},{13,14,15,12}};
+    // blank={1,2};
+    c.setInput();
+    c.mainstart(PuzzleTable,blank,level);
+    c.next();
 
     return 0;
 }
